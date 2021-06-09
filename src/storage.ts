@@ -13,7 +13,7 @@ export function getItem(key: string): Promise<string> {
     return new Promise((resolve, reject) => {
         try {
             const value = window.localStorage.getItem(key)
-            resolve(value)
+            resolve(value as any)
         } catch (err) {
             reject(err)
         }

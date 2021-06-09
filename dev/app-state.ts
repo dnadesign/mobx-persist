@@ -1,13 +1,13 @@
-import { observable, configure, action, runInAction, computed, extendObservable, ObservableMap, IObservableArray } from 'mobx'
+import { observable, action, computed, makeObservable } from 'mobx'
 import { persist } from '../src'
-import { serializable, list, object } from 'serializr'
+import { serializable } from 'serializr'
 
 // useStrict(true)
 
 export class Item {
-  @serializable @observable prop = 1
-  @serializable @observable added = 3
-  @computed get item() {
+  @serializable prop = 1
+  @serializable added = 3
+  get item() {
     return this.prop + this.added
   }
 }
@@ -17,41 +17,49 @@ export class BaseState {
 }
 
 
-class AppState extends BaseState 
+class AppState extends BaseState
 {
-  @persist @observable timer: any = 0
-  @persist('list') @observable list: number[] = [2, 22]
-  @persist('list', Item) @observable classList: Item[] = []
-  @persist('list') @observable objectList: any[] = [{ test: 1 }, null, undefined, [1]]
-  @persist('map', Item) @observable map = observable.map<Item>({})
-  @persist('object', Item) @observable item = new Item
-  @persist('object') @observable date: Date
+  @persist timer: any = 0
+  @persist('list') list: number[] = [2, 22]
+  @persist('list', Item) classList: Item[] = []
+  @persist('list') objectList: any[] = [{ test: 1 }, null, undefined, [1]]
+  @persist('map', Item) map = observable.map<Item>({})
+  @persist('object', Item) item = new Item
+  @persist('object') date: Date = new Date()
 
   constructor() {
     super()
+    makeObservable(this, {
+      timer: observable,
+      list: observable,
+      classList: observable,
+      objectList: observable,
+      map: observable,
+      item: observable,
+      date: observable,
+      counts: computed,
+      count: computed,
+      add: action,
+      inc: action,
+      put: action
+    });
     setInterval(this.inc.bind(this), 2000);
   }
-  @action('ADD')
-  add() {
-    this.classList.push(new Item)
-  }
-  @computed
   get counts() {
     return this.classList.reduce((prev, value) => prev + value.item, 0)
   }
-  @computed
   get count() {
     return this.timer - 10
   }
-  @action('INC')
+  add() {
+    this.classList.push(new Item)
+  }
   inc() {
     this.timer += 1;
   }
-  @action('PUT')
   put() {
     this.list.push(this.timer)
   }
-  @action('RESET')
   resetTimer() {
     this.timer = 0
     this.list = []

@@ -2,7 +2,7 @@ import { reaction, action } from 'mobx'
 import {
     serialize, deserialize,
     update,
-    serializable, getDefaultModelSchema
+    serializable, getDefaultModelSchema, ModelSchema
 } from 'serializr'
 import * as Storage from './storage'
 import { mergeObservables } from './merge-x'
@@ -19,7 +19,7 @@ export function persist(...args: any[]): any {
     } else if (args.length === 1) {
         return (target: any) => persistObject(target, a)
     } else {
-        return serializable.apply(null, args)
+        return serializable.apply(null, args as [target: any, key: string, baseDescriptor?: PropertyDescriptor | undefined])
     }
 }
 
@@ -48,7 +48,7 @@ export function create({
                 `[mobx-persist ${key}] LOAD_DATA`,
                 (persisted: any) => {
                     if (persisted && typeof persisted === 'object') {
-                        update(schema, store, persisted, null, customArgs)
+                        update(schema as any, store, persisted, null as any, customArgs)
                     }
                     mergeObservables(store, initialState)
                     return store
@@ -59,7 +59,7 @@ export function create({
         }
         const result = hydration()
         reaction(
-            () => serialize(schema, store),
+            () => serialize(schema as any, store),
             (data: any) => storage.setItem(key, !jsonify ? data : JSON.stringify(data)),
             {
                 delay: debounce
